@@ -1,16 +1,20 @@
-既知の未実装ギャップ: tree/quiz/chart のコードフェンス。
+tree/quiz/chart のコードフェンス。
 
 ```tree
-- src
-  - index.ts
+.
+├── src
+│   ├── index.ts
+│   └── lib
+│       └── a.ts
+└── package.json
 ```
 
 ```quiz
-Q: 1 + 1 は?
+question: 1 + 1 は?
 A: 1
 B: 2
 C: 3
-Answer: B
+correct: B
 ```
 
 ```chart:bar
