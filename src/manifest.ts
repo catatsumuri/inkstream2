@@ -34,6 +34,8 @@ export const MINTLIFY_BLOCK_TAG_NAMES = [
     ...MINTLIFY_CALLOUT_TAG_NAMES,
 ] as const;
 
+export const MINTLIFY_INLINE_TAG_NAMES = ['Badge', 'Tooltip'] as const;
+
 export const MINTLIFY_ATTRIBUTE_NAMES = [
     'title',
     'icon',

@@ -1,4 +1,5 @@
 import type {
+    Html,
     Paragraph,
     Parent,
     PhrasingContent,
@@ -6,7 +7,12 @@ import type {
     RootContent,
 } from 'mdast';
 import type { VFile } from 'vfile';
-import { MINTLIFY_ATTRIBUTE_NAMES, MINTLIFY_CALLOUT_VARIANTS } from './manifest.js';
+import {
+    MINTLIFY_ATTRIBUTE_NAMES,
+    MINTLIFY_BLOCK_TAG_NAMES,
+    MINTLIFY_CALLOUT_VARIANTS,
+    MINTLIFY_INLINE_TAG_NAMES,
+} from './manifest.js';
 import { matchCloseTag, matchOpenTag } from './match-tags.js';
 
 export interface MintlifyContainer extends Parent {
@@ -28,13 +34,14 @@ declare module 'mdast' {
     interface BlockContentMap {
         mintlifyContainer: MintlifyContainer;
     }
+
+    interface PhrasingContentMap {
+        mintlifyContainer: MintlifyContainer;
+    }
 }
 
-interface OpenFrame {
-    name: string;
-    attributes: Record<string, string>;
-    start: number;
-}
+const BLOCK_TAG_NAMES: readonly string[] = MINTLIFY_BLOCK_TAG_NAMES;
+const INLINE_TAG_NAMES: readonly string[] = MINTLIFY_INLINE_TAG_NAMES;
 
 const ALLOWED_ATTRIBUTE_NAMES: readonly string[] = MINTLIFY_ATTRIBUTE_NAMES;
 
@@ -100,8 +107,11 @@ function trimBoundaryWhitespace(
 }
 
 /**
- * Converts a paragraph whose phrasing starts with an open tag and ends with
- * the matching close tag (`<Note>text</Note>` on one line) into a container.
+ * Converts a paragraph whose phrasing starts with a block-tag open and ends
+ * with the matching close (`<Note>text</Note>` on one line) into a
+ * container. Restricted to block tag names: inline tags (Badge, Tooltip)
+ * are handled in place by `pairInlineChildren` instead, since their
+ * container must stay nested inside the paragraph rather than replace it.
  */
 function convertInlineParagraph(paragraph: Paragraph): MintlifyContainer | null {
     const children = paragraph.children;
@@ -119,7 +129,7 @@ function convertInlineParagraph(paragraph: Paragraph): MintlifyContainer | null 
 
     const open = matchOpenTag(first.value);
 
-    if (!open || open.selfClosing) {
+    if (!open || open.selfClosing || !BLOCK_TAG_NAMES.includes(open.name)) {
         return null;
     }
 
@@ -138,36 +148,48 @@ function convertInlineParagraph(paragraph: Paragraph): MintlifyContainer | null 
     );
 }
 
+interface OpenFrame {
+    name: string;
+    attributes: Record<string, string>;
+    start: number;
+}
+
 /**
- * Pairs Mintlify open/close `html` nodes among a parent's flow children and
- * lifts the nodes between them into `mintlifyContainer` nodes. Unmatched
- * close tags stay literal; unclosed open tags auto-close at the end of their
- * parent. Both emit vfile warnings instead of failing silently.
+ * Pairs Mintlify open/close `html` nodes in a node array with a stack and
+ * lifts the nodes between each matched pair into a `mintlifyContainer`
+ * built by `createNode`. Shared by flow-level pairing (children are mdast
+ * block content) and phrasing-level pairing (children are inline content);
+ * only tag names in `allowedNames` are treated as pairable, so block tags
+ * stay literal mid-sentence and inline tags stay literal at flow level.
+ * Unmatched close tags stay literal; unclosed open tags auto-close at the
+ * end of the array. Both emit vfile warnings instead of failing silently.
  */
-function pairChildren(parent: Parent, file: VFile): void {
-    const result: RootContent[] = [];
+function pairTagNodes<T extends { type: string }>(
+    children: T[],
+    file: VFile,
+    allowedNames: readonly string[],
+    createNode: (
+        name: string,
+        attributes: Record<string, string>,
+        inner: T[],
+    ) => T,
+): T[] {
+    const result: T[] = [];
     const stack: OpenFrame[] = [];
 
     const closeFrame = (frame: OpenFrame): void => {
-        const children = result.splice(frame.start);
-        result.push(createContainer(frame.name, frame.attributes, children));
+        const inner = result.splice(frame.start);
+        result.push(createNode(frame.name, frame.attributes, inner));
     };
 
-    for (const original of parent.children as RootContent[]) {
-        let child = original;
-
-        if (child.type === 'paragraph') {
-            child = convertInlineParagraph(child) ?? child;
-        }
-
+    for (const child of children) {
         if (child.type === 'html') {
-            const open = matchOpenTag(child.value);
+            const html = child as unknown as Html;
+            const open = matchOpenTag(html.value);
 
-            if (open) {
+            if (open && allowedNames.includes(open.name)) {
                 if (open.selfClosing) {
-                    result.push(
-                        createContainer(open.name, open.attributes, []),
-                    );
+                    result.push(createNode(open.name, open.attributes, []));
                 } else {
                     stack.push({
                         name: open.name,
@@ -179,9 +201,9 @@ function pairChildren(parent: Parent, file: VFile): void {
                 continue;
             }
 
-            const close = matchCloseTag(child.value);
+            const close = matchCloseTag(html.value);
 
-            if (close) {
+            if (close && allowedNames.includes(close.name)) {
                 let openIndex = -1;
 
                 for (let i = stack.length - 1; i >= 0; i--) {
@@ -223,13 +245,52 @@ function pairChildren(parent: Parent, file: VFile): void {
         closeFrame(frame);
     }
 
-    parent.children = result;
+    return result;
 }
 
+function pairChildren(parent: Parent, file: VFile): void {
+    parent.children = pairTagNodes(
+        parent.children as RootContent[],
+        file,
+        BLOCK_TAG_NAMES,
+        (name, attributes, inner) => createContainer(name, attributes, inner),
+    );
+}
+
+function pairInlineChildren(
+    children: PhrasingContent[],
+    file: VFile,
+): PhrasingContent[] {
+    return pairTagNodes(children, file, INLINE_TAG_NAMES, (
+        name,
+        attributes,
+        inner,
+    ) => createContainer(name, attributes, inner as RootContent[]));
+}
+
+/**
+ * Recurses into pre-existing structural nesting (blockquotes, lists, ...)
+ * and, for paragraphs, pairs inline tags within their phrasing content and
+ * then tries to convert the whole paragraph into a block container.
+ * Nesting created BY tag pairing itself (e.g. `<Steps><Step>...`) doesn't
+ * need recursion: `pairChildren`'s stack reconstructs it in one flat pass
+ * over the flow siblings at this level.
+ */
 function transform(parent: Parent, file: VFile): void {
-    for (const child of parent.children) {
-        if (child.type !== 'paragraph' && 'children' in child) {
-            transform(child, file);
+    const children = parent.children;
+
+    for (let i = 0; i < children.length; i++) {
+        const child = children[i];
+
+        if (child.type === 'paragraph') {
+            const paragraph = child as Paragraph;
+            paragraph.children = pairInlineChildren(
+                paragraph.children,
+                file,
+            );
+            children[i] = convertInlineParagraph(paragraph) ?? paragraph;
+        } else if ('children' in child) {
+            transform(child as Parent, file);
         }
     }
 

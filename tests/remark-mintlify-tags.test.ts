@@ -197,3 +197,87 @@ test('leaves unknown tags and code fences untouched', () => {
     const types = tree.children.map((child) => child.type);
     assert.deepEqual(types, ['html', 'paragraph', 'html', 'code']);
 });
+
+test('pairs an inline tag mid-sentence without disturbing surrounding text', () => {
+    const { tree, messages } = parse(
+        'これは <Badge color="green">New</Badge> なバッジです。',
+    );
+
+    assert.equal(messages.length, 0);
+    assert.equal(tree.children.length, 1);
+
+    const paragraph = tree.children[0];
+    assert.equal(paragraph.type, 'paragraph');
+
+    const inline = (paragraph as { children: RootContent[] }).children;
+    assert.equal(inline.length, 3);
+    assert.equal(inline[0].type, 'text');
+
+    const badge = asContainer(inline[1]);
+    assert.equal(badge.name, 'Badge');
+    assert.deepEqual(badge.attributes, { color: 'green' });
+    assert.deepEqual(badge.data, {
+        hName: 'badge',
+        hProperties: { color: 'green' },
+    });
+    assert.equal(badge.children.length, 1);
+    assert.equal(badge.children[0].type, 'text');
+
+    assert.equal(inline[2].type, 'text');
+});
+
+test('pairs two inline tags in the same paragraph', () => {
+    const { tree } = parse(
+        '<Badge>New</Badge> と <Tooltip tip="説明">用語</Tooltip> です。',
+    );
+
+    const inline = (tree.children[0] as { children: RootContent[] })
+        .children;
+    const badge = asContainer(inline[0]);
+    const tooltip = asContainer(inline[2]);
+
+    assert.equal(badge.name, 'Badge');
+    assert.equal(tooltip.name, 'Tooltip');
+    assert.deepEqual(tooltip.attributes, { tip: '説明' });
+});
+
+test('leaves a block tag literal when it appears mid-sentence', () => {
+    const { tree, messages } = parse('text <Note>x</Note> more text');
+
+    assert.equal(messages.length, 0);
+
+    const inline = (tree.children[0] as { children: RootContent[] })
+        .children;
+    const types = inline.map((node) => node.type);
+    assert.deepEqual(types, ['text', 'html', 'text', 'html', 'text']);
+});
+
+test('an inline tag alone in a paragraph stays nested inside it', () => {
+    const { tree, messages } = parse('<Badge>New</Badge>');
+
+    assert.equal(messages.length, 0);
+
+    const paragraph = tree.children[0];
+    assert.equal(paragraph.type, 'paragraph');
+
+    const badge = asContainer(
+        (paragraph as { children: RootContent[] }).children[0],
+    );
+    assert.equal(badge.name, 'Badge');
+});
+
+test('a block tag pair still consumes the whole paragraph when inline tags are also present', () => {
+    const { tree } = parse('<Note>outer <Badge>x</Badge> more</Note>');
+
+    const note = asContainer(tree.children[0]);
+    assert.equal(note.name, 'Note');
+    assert.equal(note.children.length, 1);
+
+    const paragraph = note.children[0];
+    assert.equal(paragraph.type, 'paragraph');
+
+    const badge = asContainer(
+        (paragraph as { children: RootContent[] }).children[1],
+    );
+    assert.equal(badge.name, 'Badge');
+});
