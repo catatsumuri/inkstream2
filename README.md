@@ -56,6 +56,32 @@ preprocessor; v2 builds the same structure directly on the mdast tree.
    line-based step that encodes the metadata into query parameters; an
    image renderer reads them back with `parseImageMetadata`.
 
+## Drop-in React renderer (`@catatsumuri/inkstream2/react`)
+
+The core package stays React-free; the `/react` subpath ships everything a
+React app needs to render inkstream markdown in one line:
+
+```tsx
+import { InkstreamMarkdown } from '@catatsumuri/inkstream2/react';
+
+<InkstreamMarkdown>{markdownSource}</InkstreamMarkdown>;
+```
+
+- `InkstreamMarkdown` — wraps react-markdown with the full plugin chain and
+  the string-level normalizers already wired in the correct order.
+- `inkstreamDefaultComponents` — default renderers for every custom element
+  (callouts, cards, steps, tabs, accordions, badges, tooltips, images,
+  updates, API fields, tree, quiz, chart). They carry stable `ink-*` class
+  names and no visual opinions: style them with plain CSS, or replace
+  individual renderers via the `components` prop.
+- `inkstreamRemarkPlugins` / `normalizeInkstreamMarkdown` — the ordered
+  plugin array and composed preprocessing chain, also exported from the
+  core entry point for non-React pipelines (the golden corpus renderer
+  uses the same exports).
+
+`react` and `react-markdown` are optional peer dependencies — consumers
+that only use the core entry point never need them.
+
 ## What the AST approach fixes structurally
 
 - **No nesting limit** — v1 encoded depth in colon-fence length (7 levels
