@@ -55,7 +55,7 @@ export function remarkZennDirective() {
                 const data = directiveNode.data ?? (directiveNode.data = {});
                 data.hName = 'aside';
                 data.hProperties = {
-                    className: `msg ${typeClass}`,
+                    className: ['msg', typeClass],
                 };
             }
 
@@ -96,7 +96,7 @@ export function remarkZennDirective() {
                         type: 'paragraph',
                         data: {
                             hName: 'div',
-                            hProperties: { className: 'details-content' },
+                            hProperties: { className: ['details-content'] },
                         },
                         children: bodyChildren,
                     } as Paragraph,

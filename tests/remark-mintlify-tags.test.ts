@@ -35,7 +35,7 @@ test('pairs a callout block into an aside container', () => {
     assert.equal(note.name, 'Note');
     assert.deepEqual(note.data, {
         hName: 'aside',
-        hProperties: { className: 'msg note' },
+        hProperties: { className: ['msg', 'note'] },
     });
     assert.equal(note.children.length, 1);
     assert.equal(note.children[0].type, 'paragraph');

@@ -22,7 +22,7 @@ export interface MintlifyContainer extends Parent {
     children: RootContent[];
     data?: {
         hName?: string;
-        hProperties?: Record<string, string>;
+        hProperties?: Record<string, string | string[]>;
     };
 }
 
@@ -71,7 +71,7 @@ function createContainer(
         attributes,
         children,
         data: variant
-            ? { hName: 'aside', hProperties: { className: `msg ${variant}` } }
+            ? { hName: 'aside', hProperties: { className: ['msg', variant] } }
             : {
                   hName: name.toLowerCase(),
                   hProperties: filterAttributes(attributes),

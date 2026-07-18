@@ -33,7 +33,7 @@ test('converts a plain :::message into an info aside', () => {
     assert.equal(node.name, 'message');
     assert.deepEqual(node.data, {
         hName: 'aside',
-        hProperties: { className: 'msg info' },
+        hProperties: { className: ['msg', 'info'] },
     });
 });
 
@@ -41,7 +41,7 @@ test('reads the callout variant from a class attribute', () => {
     const tree = parse(':::message{.alert}\n警告です。\n:::');
 
     const node = tree.children[0] as unknown as DirectiveLike;
-    assert.equal(node.data?.hProperties?.className, 'msg alert');
+    assert.deepEqual(node.data?.hProperties?.className, ['msg', 'alert']);
 });
 
 test('converts :::details without a label using a default summary', () => {
@@ -57,7 +57,7 @@ test('converts :::details without a label using a default summary', () => {
 
     const body = node.children[1] as unknown as DirectiveLike;
     assert.equal(body.data?.hName, 'div');
-    assert.equal(body.data?.hProperties?.className, 'details-content');
+    assert.deepEqual(body.data?.hProperties?.className, ['details-content']);
 });
 
 test('converts :::details[label] using the bracket label as the summary', () => {
