@@ -6,9 +6,13 @@ preprocessor; v2 builds the same structure directly on the mdast tree.
 
 ## Pipeline
 
-1. `normalizeMintlifyBlocks(markdown)` — the only line-based step left: a
-   dumb pass that surrounds standalone tag lines with blank lines (skipping
-   code fences) so remark parses each tag as its own `html` flow node.
+1. `normalizeMintlifyBlocks(markdown)` — line-based pre-pass that surrounds
+   standalone tag lines with blank lines (skipping code fences) so remark
+   parses each tag as its own `html` flow node, strips the authoring
+   indentation inside open tags (up to the open tag's indent + 4, mirroring
+   v1) so indented tag bodies don't become indented code blocks, and
+   flattens JSX array attributes (`tags={["A", "B"]}` → `tags="A,B"`), which
+   would otherwise make the tag invalid HTML for remark.
 2. `remark-parse` — standard markdown parsing.
 3. `remarkMintlifyTags` — pairs open/close `html` nodes with a stack (once
    for each parent's flow children, once for each paragraph's phrasing
@@ -35,6 +39,22 @@ preprocessor; v2 builds the same structure directly on the mdast tree.
    remark-directive produces. This is the one piece of the pipeline that
    still needs a third-party directive parser, since colon-fence syntax
    itself isn't something a tag-pairing plugin over `html` nodes can parse.
+   Like v1, the normalizer protects code fences *and* inline code spans, so
+   literal `` `:::message alert` `` examples in prose survive; it also
+   reduces Zenn's `@[card](url)` / `@[github](url)` embeds to bare URL
+   lines for a linkify-style renderer to pick up.
+6. `remarkGithubAlerts` — normalizes GitHub blockquote alerts (`> [!NOTE]`
+   etc.) onto the same `aside.msg` contract as the Mintlify callouts and
+   `:::message`.
+7. `remarkTreeTags` — converts a paired JSX `<Tree><Tree.Folder>…</Tree>`
+   block (captured by `remarkMintlifyTags`) into the same JSON-carrying
+   `tree` node the ` ```tree ` fence produces.
+8. `normalizeZennImages(markdown)` + `parseImageMetadata(url)` — Zenn's
+   image sizing/caption syntax (`![](url =250x)`, a `*caption*` line under
+   the image). The sizing suffix lives inside the markdown image
+   destination, where remark's parser refuses spaces, so this stays a
+   line-based step that encodes the metadata into query parameters; an
+   image renderer reads them back with `parseImageMetadata`.
 
 ## What the AST approach fixes structurally
 
@@ -61,11 +81,12 @@ preprocessor; v2 builds the same structure directly on the mdast tree.
 - Tags inside blockquotes/lists currently require blank lines around them
   (the normalizer only handles top-level tag lines); fixing this means
   splitting multi-line `html` nodes or normalizing per container.
-- The JSX `<Tree><Tree.Folder>...</Tree>` tree syntax (only the
-  ` ```tree ` fenced-ASCII-listing form is implemented).
-- Zenn's `@[card](url)` / `@[github](url)` embed syntax (unrelated to
-  colon-fence directives; v1 rewrites these to bare URL lines for a
-  linkify-to-card plugin, which isn't part of v2 yet either).
+- Multi-line JSX open tags (an open tag with attributes spread across
+  several lines; v1 joins them in `joinMultilineJsxTags`).
+- A linkify-to-card renderer for the bare URL lines the embed shorthand
+  produces (v2 reduces `@[card](url)` to the URL like v1, but the card
+  preview component itself lives in the consumer).
+- Wikilinks (`[[page]]`), which v1 resolves via `remark-wikilinks`.
 - Attribute naming convention: v1 prefixes hProperties with
   `data-<component>-<attr>` (e.g. `data-card-href`), presumably because its
   output was raw custom HTML elements read via `dataset`. v2 intentionally
@@ -99,22 +120,26 @@ npm run golden
 - Requires a sibling `../inkstream` checkout with `dist/` built
   (`@catatsumuri/inkstream` is a `file:` devDependency).
 
-The fixtures are synthetic, not real thinkstream/yomitoki documents — those
-weren't available in this environment. Swap in real corpus files under
-`golden/corpus/` to get a truer signal; the harness doesn't care where the
-`.md` files came from.
+Fixtures `01`–`09` are synthetic; `10`–`14` are the five real syntax-guide
+documents from thinkstream's `SyntaxSeeder` (basic markdown, extended
+markdown/GFM, Zenn syntax, Mintlify syntax, thinkstream syntax) — a far
+truer signal, and the corpus that surfaced the fence-state, inline-code,
+indentation, and array-attribute bugs the current pipeline fixes.
 
-Current signal (9 fixtures): 4 match byte-for-byte (plain GFM, a multi-line
-callout, a native `:::message`/`:::details` pair, an unclosed-tag warning).
-The 5 that differ are exactly the gaps already listed above, and none of
-them is a genuine unimplemented feature anymore:
+Current signal (14 fixtures): 7 match byte-for-byte, including three of the
+five real documents (`10` basic, `11` extended/GFM+alerts, `12` Zenn). The
+7 that differ do so only for decided, documented reasons:
 
 - `03` differs because v1 *can't* pair a single-line tag at all (v2 is
   strictly better here, not a gap).
-- `04`, `05`, `08` differ only in attribute naming (decided, see above).
-- `06` (tree/quiz/chart) differs only in the redundant-raw-JSON-dump
-  question above — the parsed JSON payload itself is byte-identical to v1
-  for all three fence types.
+- `04`, `05`, `08`, `13` differ in attribute/element naming (decided, see
+  above) — `13` (the real Mintlify guide) additionally shows v1's
+  `details`-based accordion rendering vs. v2's `accordion` element, same
+  naming question.
+- `06`, `13`, `14` also show v1's redundant raw-JSON `<pre><code>` dump for
+  tree/quiz/chart — the parsed JSON payloads themselves are byte-identical
+  to v1 in every case, including the real documents' shared-indentation and
+  folder-hint tree fences.
 
 Nothing in that list is a surprise; it's the value of running the diff for
 real instead of reasoning about it.

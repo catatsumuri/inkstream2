@@ -32,3 +32,49 @@ test('matches details shorthand regardless of colon-fence depth', () => {
         '::::details[外側]\n:::details[内側]\n:::\n::::',
     );
 });
+
+test('reduces @[card]/@[github] embeds to bare URL lines', () => {
+    assert.equal(
+        normalizeZennDirectiveShorthand('@[card](https://zenn.dev/a)'),
+        'https://zenn.dev/a',
+    );
+    assert.equal(
+        normalizeZennDirectiveShorthand('@[github](https://github.com/a/b)'),
+        'https://github.com/a/b',
+    );
+    assert.equal(
+        normalizeZennDirectiveShorthand('@[youtube](https://example.com)'),
+        '@[youtube](https://example.com)',
+    );
+});
+
+test('does not rewrite shorthand written as inline code', () => {
+    const input =
+        'Use `:::message alert` for warnings and `:::details タイトル` to collapse.';
+    assert.equal(normalizeZennDirectiveShorthand(input), input);
+});
+
+test('a fence line with an info string does not close an open fence', () => {
+    const input = '````md\n:::details Show code\n```js\nx\n```\n:::\n````';
+    assert.equal(normalizeZennDirectiveShorthand(input), input);
+});
+
+test('resumes rewriting after a fence properly closes', () => {
+    const input = [
+        '```md',
+        ':::message alert',
+        '```',
+        ':::message alert',
+        'rendered',
+        ':::',
+    ].join('\n');
+    const expected = [
+        '```md',
+        ':::message alert',
+        '```',
+        ':::message{.alert}',
+        'rendered',
+        ':::',
+    ].join('\n');
+    assert.equal(normalizeZennDirectiveShorthand(input), expected);
+});

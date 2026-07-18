@@ -31,10 +31,24 @@ export const MINTLIFY_BLOCK_TAG_NAMES = [
     'ParamField',
     'CodeGroup',
     'Update',
+    'Tree',
     ...MINTLIFY_CALLOUT_TAG_NAMES,
 ] as const;
 
 export const MINTLIFY_INLINE_TAG_NAMES = ['Badge', 'Tooltip'] as const;
+
+/**
+ * GitHub blockquote alert markers (`> [!NOTE]` etc.) mapped onto the same
+ * callout variants the Mintlify tags and `:::message` produce. WARNING and
+ * CAUTION intentionally share the strongest variant, mirroring v1.
+ */
+export const GITHUB_ALERT_VARIANTS = {
+    NOTE: 'note',
+    TIP: 'tip',
+    IMPORTANT: 'info',
+    WARNING: 'alert',
+    CAUTION: 'alert',
+} as const;
 
 export const MINTLIFY_ATTRIBUTE_NAMES = [
     'title',
