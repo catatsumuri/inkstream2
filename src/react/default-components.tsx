@@ -1,7 +1,21 @@
 import { CircleCheck, CircleX } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Components } from 'react-markdown';
+import {
+    Bar,
+    BarChart,
+    CartesianGrid,
+    PolarAngleAxis,
+    PolarGrid,
+    PolarRadiusAxis,
+    Radar,
+    RadarChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from 'recharts';
 import type { ChartConfig } from '../parse-chart-fence.js';
 import type { QuizContent } from '../parse-quiz-fence.js';
 import type { TreeNode } from '../parse-tree-fence.js';
@@ -211,6 +225,144 @@ function QuizRenderer({ quiz }: InkstreamElementProps) {
 }
 
 /**
+ * Tracks whether the `dark` class is present on the document root, so the
+ * chart renderer can pick colors that work in both themes. recharts takes
+ * its colors as props rather than CSS, so this can't be handled by the
+ * `ink-*` stylesheet alone.
+ */
+function useIsDarkMode(): boolean {
+    const [isDark, setIsDark] = useState(false);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+
+        const update = () => {
+            setIsDark(document.documentElement.classList.contains('dark'));
+        };
+
+        update();
+
+        const observer = new MutationObserver(update);
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class'],
+        });
+
+        return () => observer.disconnect();
+    }, []);
+
+    return isDark;
+}
+
+function getChartDomain(config: ChartConfig): [number, number] {
+    const min = config.min ?? 0;
+    const max =
+        config.max ?? Math.max(...config.data.map((point) => point.value));
+
+    if (max <= min) {
+        return [min, min + 1];
+    }
+
+    return [min, max];
+}
+
+function ChartRenderer({ chart }: InkstreamElementProps) {
+    const config = parseJsonProp<ChartConfig>(chart);
+    const isDark = useIsDarkMode();
+
+    if (!config) {
+        return null;
+    }
+
+    const gridColor = isDark ? '#374151' : '#e5e7eb';
+    const textColor = isDark ? '#9ca3af' : '#6b7280';
+    const fillColor = isDark ? '#818cf8' : '#4f46e5';
+    const strokeColor = isDark ? '#6366f1' : '#4338ca';
+    const tooltipStyle = {
+        background: isDark ? '#111827' : '#ffffff',
+        border: `1px solid ${gridColor}`,
+        borderRadius: '8px',
+        fontSize: '12px',
+        color: textColor,
+    };
+    const [domainMin, domainMax] = getChartDomain(config);
+
+    return (
+        <div className="ink-chart">
+            {config.title && (
+                <p className="ink-chart-title">{config.title}</p>
+            )}
+            {config.type === 'bar' ? (
+                <ResponsiveContainer
+                    width="100%"
+                    height={config.data.length * 44 + 60}
+                >
+                    <BarChart
+                        layout="vertical"
+                        data={config.data}
+                        margin={{ top: 4, right: 16, bottom: 4, left: 8 }}
+                    >
+                        <CartesianGrid
+                            strokeDasharray="3 3"
+                            horizontal={false}
+                            stroke={gridColor}
+                        />
+                        <XAxis
+                            type="number"
+                            domain={[domainMin, domainMax]}
+                            tick={{ fill: textColor, fontSize: 12 }}
+                            axisLine={{ stroke: gridColor }}
+                            tickLine={false}
+                        />
+                        <YAxis
+                            type="category"
+                            dataKey="label"
+                            width={96}
+                            tick={{ fill: textColor, fontSize: 12 }}
+                            axisLine={false}
+                            tickLine={false}
+                        />
+                        <Tooltip
+                            cursor={{ fill: isDark ? '#1f2937' : '#f3f4f6' }}
+                            contentStyle={tooltipStyle}
+                        />
+                        <Bar
+                            dataKey="value"
+                            fill={fillColor}
+                            radius={[0, 4, 4, 0]}
+                        />
+                    </BarChart>
+                </ResponsiveContainer>
+            ) : (
+                <ResponsiveContainer width="100%" height={340}>
+                    <RadarChart data={config.data}>
+                        <PolarGrid stroke={gridColor} />
+                        <PolarAngleAxis
+                            dataKey="label"
+                            tick={{ fill: textColor, fontSize: 12 }}
+                        />
+                        <PolarRadiusAxis
+                            domain={[domainMin, domainMax]}
+                            tick={{ fill: textColor, fontSize: 10 }}
+                            axisLine={false}
+                        />
+                        <Radar
+                            dataKey="value"
+                            stroke={strokeColor}
+                            fill={fillColor}
+                            fillOpacity={0.35}
+                        />
+                        <Tooltip contentStyle={tooltipStyle} />
+                    </RadarChart>
+                </ResponsiveContainer>
+            )}
+        </div>
+    );
+}
+
+/**
  * Default renderers for every custom element the inkstream remark plugins
  * emit. They carry stable `ink-*` class names and no visual opinions, so
  * consumers style them with plain CSS (or replace individual renderers via
@@ -381,44 +533,5 @@ export const inkstreamDefaultComponents = {
         );
     },
     quiz: QuizRenderer,
-    chart: ({ chart }: InkstreamElementProps) => {
-        const config = parseJsonProp<ChartConfig>(chart);
-
-        if (!config) {
-            return null;
-        }
-
-        const min = config.min ?? 0;
-        const max =
-            config.max ?? Math.max(...config.data.map((point) => point.value));
-        const domain = Math.max(max - min, 1);
-
-        return (
-            <div className="ink-chart">
-                {config.title && (
-                    <p className="ink-chart-title">{config.title}</p>
-                )}
-                <div className="ink-chart-rows">
-                    {config.data.map((point) => (
-                        <div key={point.label} className="ink-chart-row">
-                            <span className="ink-chart-label">
-                                {point.label}
-                            </span>
-                            <span className="ink-chart-track">
-                                <span
-                                    className="ink-chart-bar"
-                                    style={{
-                                        width: `${((point.value - min) / domain) * 100}%`,
-                                    }}
-                                />
-                            </span>
-                            <span className="ink-chart-value">
-                                {point.value}
-                            </span>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        );
-    },
+    chart: ChartRenderer,
 } as unknown as Components;
