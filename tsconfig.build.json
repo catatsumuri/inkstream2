@@ -1,0 +1,17 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        // Building src in isolation (without tests/, unlike the base
+        // config) drops the DOM ambient globals tests/ transitively pulls
+        // in via @types/jsdom; declare them explicitly instead of relying
+        // on that accidental leak. src's browser code already guards every
+        // DOM access behind `typeof window === 'undefined'` for SSR.
+        "lib": ["es2022", "dom", "dom.iterable"],
+        "noEmit": false,
+        "declaration": true,
+        "declarationMap": true,
+        "sourceMap": true,
+        "outDir": "dist"
+    },
+    "include": ["src"]
+}

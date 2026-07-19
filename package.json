@@ -9,13 +9,27 @@
     "sideEffects": [
         "*.css"
     ],
+    "files": [
+        "dist"
+    ],
     "exports": {
-        ".": "./src/index.ts",
-        "./react": "./src/react/index.ts",
-        "./react/mermaid": "./src/react/mermaid-diagram.tsx",
-        "./styles.css": "./src/react/styles.css"
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        },
+        "./react": {
+            "types": "./dist/react/index.d.ts",
+            "import": "./dist/react/index.js"
+        },
+        "./react/mermaid": {
+            "types": "./dist/react/mermaid-diagram.d.ts",
+            "import": "./dist/react/mermaid-diagram.js"
+        },
+        "./styles.css": "./dist/react/styles.css"
     },
     "scripts": {
+        "build": "tsc -p tsconfig.build.json && node scripts/copy-static-assets.mjs",
+        "prepare": "npm run build",
         "test": "node --import tsx --test tests/*.test.ts",
         "typecheck": "tsc --noEmit",
         "golden": "tsx golden/diff.ts"

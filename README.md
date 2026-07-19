@@ -163,9 +163,12 @@ no React at all.
   uses raw names (`href`) since containers render through React components
   that read props directly — this is a deliberate v2 API change, not a gap
   to close.
-- npm packaging (built dist + bundled CSS) and a CLI. See
-  `DISTRIBUTION.md` for the plan. CI (typecheck/test/golden) is already
-  in place.
+- A CLI. See `DISTRIBUTION.md` for the plan. The build (`npm run build`
+  → `dist/` with `.d.ts`, exports pointing at it, `styles.css` copied
+  alongside) and CI (typecheck/test/build/golden) are already in place;
+  this package isn't published to the npm registry yet (`"private":
+  true`) — consumed via a GitHub commit pin, which auto-builds `dist/`
+  through the `prepare` script on install.
 
 ## Known limitations (not planned)
 
