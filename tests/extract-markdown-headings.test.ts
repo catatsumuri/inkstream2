@@ -64,3 +64,19 @@ test('strips links and images from heading text', () => {
 
     assert.equal(headings[0].text, 'See the docs and alt text');
 });
+
+test('resolves wikilinks in heading text the same way remarkWikilinks renders them', () => {
+    const headings = extractMarkdownHeadings(
+        ['# See [[known]]', '## And [[ns/known|Custom Label]] too'].join(
+            '\n\n',
+        ),
+    );
+
+    assert.deepEqual(
+        headings.map((heading) => ({ text: heading.text, id: heading.id })),
+        [
+            { text: 'See known', id: 'see-known' },
+            { text: 'And Custom Label too', id: 'and-custom-label-too' },
+        ],
+    );
+});

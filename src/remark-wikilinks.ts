@@ -1,7 +1,6 @@
 import type { Link, Root, Text } from 'mdast';
 import type { Node, Parent } from 'unist';
-
-const WIKILINK_RE = /\[\[([^\]|]+?)(?:\|([^\]]+?))?\]\]/g;
+import { parseWikilinkMatch, WIKILINK_RE } from './wikilink-label.js';
 
 /**
  * A resolver's return value: either a plain URL string (always treated as
@@ -40,8 +39,7 @@ function splitWikilinksInText(
 
     while ((match = WIKILINK_RE.exec(node.value)) !== null) {
         const [full, rawPath, rawLabel] = match;
-        const path = rawPath.trim();
-        const label = rawLabel?.trim() || path.split('/').pop() || path;
+        const { path, label } = parseWikilinkMatch(rawPath, rawLabel);
 
         if (match.index > lastIndex) {
             parts.push({
