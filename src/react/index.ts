@@ -24,3 +24,7 @@ export {
 } from './inkstream-markdown.js';
 export { normalizeInkstreamMarkdown } from '../normalize-inkstream-markdown.js';
 export { inkstreamRemarkPlugins } from '../remark-plugins.js';
+export type {
+    ResolveWikilink,
+    WikilinkResolution,
+} from '../remark-wikilinks.js';

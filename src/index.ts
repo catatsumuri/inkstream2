@@ -32,6 +32,11 @@ export { createHeadingIdDispenser } from './heading-id-dispenser.js';
 export { remarkZennDirective } from './remark-zenn-directive.js';
 export type { EmbedType } from './remark-linkify-to-card.js';
 export { remarkLinkifyToCard } from './remark-linkify-to-card.js';
+export type {
+    ResolveWikilink,
+    WikilinkResolution,
+} from './remark-wikilinks.js';
+export { remarkWikilinks } from './remark-wikilinks.js';
 export type { GithubFileInfo } from './url-matcher.js';
 export {
     extractYoutubeVideoParameters,

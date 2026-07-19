@@ -1,8 +1,11 @@
+import { useMemo } from 'react';
 import Markdown from 'react-markdown';
 import type { Components } from 'react-markdown';
+import type { PluggableList } from 'unified';
 import { createHeadingIdDispenser } from '../heading-id-dispenser.js';
 import { normalizeInkstreamMarkdown } from '../normalize-inkstream-markdown.js';
 import { inkstreamRemarkPlugins } from '../remark-plugins.js';
+import { remarkWikilinks, type ResolveWikilink } from '../remark-wikilinks.js';
 import { inkstreamDefaultComponents } from './default-components.js';
 import { OgpEndpointContext } from './embed-components.js';
 import { HeadingIdContext } from './heading-components.js';
@@ -31,6 +34,13 @@ export interface InkstreamMarkdownProps {
      * fallback instead of rich metadata.
      */
     ogpEndpoint?: string;
+    /**
+     * Resolves `[[full_path]]` / `[[full_path|label]]` wikilink syntax to a
+     * URL. Omit to leave `[[...]]` as literal text — resolution needs
+     * app-specific routing/lookup knowledge (e.g. matching a document by
+     * title), so there is no default.
+     */
+    resolveWikilink?: ResolveWikilink;
 }
 
 /**
@@ -44,10 +54,22 @@ export function InkstreamMarkdown({
     components,
     headingIdPrefix,
     ogpEndpoint,
+    resolveWikilink,
 }: InkstreamMarkdownProps) {
     // A fresh dispenser per render pass keeps duplicate-heading numbering
     // deterministic across re-renders.
     const dispenseHeadingId = createHeadingIdDispenser();
+
+    // remarkWikilinks is only added when a resolver is supplied, appended
+    // after remarkLinkifyToCard so a lone `[[path]]` paragraph is never
+    // mistaken for a standalone-URL embed.
+    const remarkPlugins: PluggableList = useMemo(
+        () =>
+            resolveWikilink
+                ? [...inkstreamRemarkPlugins, [remarkWikilinks, resolveWikilink]]
+                : inkstreamRemarkPlugins,
+        [resolveWikilink],
+    );
 
     return (
         <HeadingIdContext.Provider
@@ -60,7 +82,7 @@ export function InkstreamMarkdown({
                     }
                 >
                     <Markdown
-                        remarkPlugins={inkstreamRemarkPlugins}
+                        remarkPlugins={remarkPlugins}
                         components={{
                             ...inkstreamDefaultComponents,
                             ...components,
