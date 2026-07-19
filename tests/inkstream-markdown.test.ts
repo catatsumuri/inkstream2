@@ -15,7 +15,8 @@ test('renders plain markdown inside the ink-markdown wrapper', () => {
     const html = render('# Hello\n\nworld');
 
     assert.match(html, /<div class="ink-markdown">/);
-    assert.match(html, /<h1>Hello<\/h1>/);
+    assert.match(html, /<h1 id="hello" class="ink-heading">Hello/);
+    assert.match(html, /<p>world<\/p>/);
 });
 
 test('renders Mintlify callouts with variant classes', () => {

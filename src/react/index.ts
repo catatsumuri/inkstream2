@@ -8,6 +8,10 @@ export {
     type InkstreamElementProps,
 } from './default-components.js';
 export {
+    extractRenderedHeadingText,
+    headingComponents,
+} from './heading-components.js';
+export {
     InkstreamMarkdown,
     type InkstreamMarkdownProps,
 } from './inkstream-markdown.js';

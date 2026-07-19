@@ -21,6 +21,7 @@ import type { QuizContent } from '../parse-quiz-fence.js';
 import type { TreeNode } from '../parse-tree-fence.js';
 import { parseImageMetadata } from '../zenn-images.js';
 import { CodeBlock } from './code-block.js';
+import { headingComponents } from './heading-components.js';
 import { useIsDarkMode } from './use-is-dark-mode.js';
 
 /**
@@ -504,6 +505,7 @@ export const inkstreamDefaultComponents = {
     },
     quiz: QuizRenderer,
     chart: ChartRenderer,
+    ...headingComponents,
     code: CodeBlock,
     // CodeBlock renders its own <pre> inside the .ink-code-block container,
     // so the default <pre> wrapper is unwrapped to a fragment.

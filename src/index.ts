@@ -23,6 +23,12 @@ export {
     remarkCodeFenceComponents,
 } from './remark-code-fence-components.js';
 export { remarkCodeMeta } from './remark-code-meta.js';
+export { slugify } from './slugify.js';
+export { normalizeMarkdownHeadingText } from './markdown-heading-text.js';
+export type { MarkdownHeading } from './extract-markdown-headings.js';
+export { extractMarkdownHeadings } from './extract-markdown-headings.js';
+export type { HeadingIdDispenser } from './heading-id-dispenser.js';
+export { createHeadingIdDispenser } from './heading-id-dispenser.js';
 export { remarkZennDirective } from './remark-zenn-directive.js';
 export { inkstreamRemarkPlugins } from './remark-plugins.js';
 export type { ChartConfig, ChartDataPoint, ChartType } from './parse-chart-fence.js';
