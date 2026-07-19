@@ -14,8 +14,8 @@ export type WikilinkResolution = string | { url: string; exists?: boolean };
 /**
  * Resolves a wikilink's `full_path` (the text between `[[` and `]]`, before
  * any `|label`) to a URL. Path-to-URL resolution needs app-specific
- * knowledge inkstream2 doesn't have (routing, a document lookup, ...), so
- * it's supplied by the caller.
+ * knowledge this package doesn't have (routing, a document lookup, ...),
+ * so it's supplied by the caller.
  */
 export type ResolveWikilink = (path: string) => WikilinkResolution;
 

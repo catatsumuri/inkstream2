@@ -1,8 +1,11 @@
-# inkstream2 (draft)
+# inkstream
 
-Draft rewrite of the inkstream markdown engine. v1 converts Mintlify-style
-JSX tags to colon-fence directives with a ~1,850-line line-based string
-preprocessor; v2 builds the same structure directly on the mdast tree.
+Markdown engine for Mintlify-style JSX tags, Zenn directives, and GFM,
+built as remark/rehype plugins over the mdast tree rather than a
+line-based string preprocessor. Supersedes an earlier draft (internally
+called "v1" below) that converted the same JSX tags to colon-fence
+directives with a ~1,850-line line-based preprocessor; that draft is
+frozen and unpublished.
 
 ## Pipeline
 
@@ -58,7 +61,7 @@ preprocessor; v2 builds the same structure directly on the mdast tree.
 
 ## Using the library: two layers
 
-inkstream2 is consumed at two distinct levels, and every feature belongs
+inkstream is consumed at two distinct levels, and every feature belongs
 to exactly one of them. The boundary is the `.ink-markdown` element:
 **inside it is the library's job; outside it — and everything that needs
 app-specific knowledge — is the consumer's job.**
@@ -69,7 +72,7 @@ The `/react` subpath renders inkstream markdown in one line, and the core
 package stays React-free:
 
 ```tsx
-import { InkstreamMarkdown } from '@catatsumuri/inkstream2/react';
+import { InkstreamMarkdown } from '@catatsumuri/inkstream/react';
 
 <InkstreamMarkdown>{markdownSource}</InkstreamMarkdown>;
 ```
@@ -135,10 +138,10 @@ no React at all.
   v2's `mintlifyContainer` has no children for these, so only the intended
   component renders.
 
-## Not in this draft (planned)
+## Not yet implemented (planned)
 
-- Per-component attribute schemas (draft reuses the v1 global allowlist for
-  `hProperties`; the full parsed attribute map is kept on the node).
+- Per-component attribute schemas (currently reuses v1's global allowlist
+  for `hProperties`; the full parsed attribute map is kept on the node).
 - Tags inside blockquotes/lists currently require blank lines around them
   (the normalizer only handles top-level tag lines); fixing this means
   splitting multi-line `html` nodes or normalizing per container.
@@ -150,7 +153,9 @@ no React at all.
   uses raw names (`href`) since containers render through React components
   that read props directly — this is a deliberate v2 API change, not a gap
   to close.
-- Packaging, lint/format/CI.
+- npm packaging (built dist + bundled CSS) and a CLI. See
+  `DISTRIBUTION.md` for the plan. CI (typecheck/test/golden) is already
+  in place.
 
 ## Golden corpus (`golden/`)
 

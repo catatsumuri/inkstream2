@@ -34,10 +34,10 @@ function visitContainerDirectives(
 /**
  * Handles the native `:::message` / `:::details` container-directive
  * syntax (parsed by `remark-directive`, which must run before this plugin).
- * Ported from inkstream v1's `remark-zenn-directive` -- this is the one
- * mdast shape inkstream2's own tag-pairing engine doesn't produce, since
- * v2 builds Mintlify callouts as `mintlifyContainer` nodes directly rather
- * than routing them through colon-fence directives.
+ * Ported from the old line-based `remark-zenn-directive` -- this is the
+ * one mdast shape the tag-pairing engine here doesn't produce, since this
+ * pipeline builds Mintlify callouts as `mintlifyContainer` nodes directly
+ * rather than routing them through colon-fence directives.
  */
 export function remarkZennDirective() {
     return (tree: Root): void => {

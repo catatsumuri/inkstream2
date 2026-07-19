@@ -1,7 +1,7 @@
 {
-    "name": "@catatsumuri/inkstream2",
+    "name": "@catatsumuri/inkstream",
     "version": "0.0.0",
-    "description": "Draft rewrite of the inkstream markdown engine: AST-based Mintlify tag pairing instead of line-based string preprocessing.",
+    "description": "Markdown engine for Mintlify-style JSX tags, Zenn directives, and GFM: AST-based tag pairing instead of line-based string preprocessing.",
     "license": "MIT",
     "author": "catatsumuri",
     "private": true,

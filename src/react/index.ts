@@ -1,7 +1,7 @@
 // MermaidDiagram is deliberately not re-exported here: a static re-export
 // would pull the (huge) mermaid bundle into the main chunk and defeat the
 // lazy import in code-block.tsx. Import it from
-// '@catatsumuri/inkstream2/react/mermaid' if you need it directly.
+// '@catatsumuri/inkstream/react/mermaid' if you need it directly.
 export { CodeBlock } from './code-block.js';
 export {
     GithubEmbed,
