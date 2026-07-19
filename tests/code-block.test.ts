@@ -117,6 +117,14 @@ test('diff fences render classified rows with symbols', async () => {
     );
 });
 
+test('an empty fenced code block renders no content instead of the literal "undefined"', async () => {
+    const container = await render(['```js', '```'].join('\n'));
+
+    const code = container.querySelector('.ink-code-tokens.language-js');
+    assert.ok(code, 'expected an .ink-code-tokens.language-js element');
+    assert.equal(code.textContent, '');
+});
+
 test('inline code stays a plain <code> element', async () => {
     const container = await render('Call `useState` to hold state.');
 

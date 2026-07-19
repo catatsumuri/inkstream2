@@ -191,7 +191,7 @@ export function CodeBlock({
     const [copied, setCopied] = useState(false);
     const highlighter = useShikiHighlighter();
 
-    const rawContent = String(children);
+    const rawContent = String(children ?? '');
     const content = rawContent.replace(/\n$/, '');
 
     // react-markdown v10: fenced code blocks always have a trailing newline in children
