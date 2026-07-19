@@ -93,10 +93,20 @@ Everything below works with no props and no app-side code:
 - GitHub file embeds from standalone blob URLs
   (`raw.githubusercontent.com` allows CORS, so the browser fetches
   directly — no server help needed)
+- A default look via an optional stylesheet:
+  `import '@catatsumuri/inkstream/styles.css';`. Every rule targets a
+  stable `ink-*` class name inside `@layer inkstream`, so any unlayered
+  rule a consumer writes overrides it without a specificity fight, and
+  eight semantic colors (border/foreground/muted/primary/accent/card)
+  read from `--ink-*` custom properties with neutral fallbacks — see
+  the file's header comment for the full list and a theme-bridge
+  example.
 
-One deliberate non-feature: the default renderers carry stable `ink-*`
-class names and **no visual opinions**. Layer 1 gives you correct
-structure; making it look right is Layer 2's stylesheet.
+The renderers themselves stay style-agnostic (only class names, no
+inline styles) — `styles.css` is what turns Layer 1's correct structure
+into something that looks right without any app code. Skip the import
+entirely for unstyled markup, or import it and override just the
+`--ink-*` bridge (Layer 2) to match an existing design system.
 
 ### Layer 2 — App integration surface
 
@@ -107,7 +117,7 @@ implementation for each.
 
 | Integration point | What the app supplies | Without it | kb_practice reference |
 | --- | --- | --- | --- |
-| `ink-*` stylesheet | CSS for the class hooks | Unstyled structure | `resources/css/inkstream.css` |
+| Theme bridge | `--ink-*` custom properties pointing at the app's own design tokens | The package's neutral (zinc-style) default colors | `resources/css/inkstream.css` maps `--ink-border` → `--border`, etc. |
 | `resolveWikilink` prop | `[[path]]` → URL (routing/DB lookup) | `[[...]]` stays literal text | title→id map; unresolved links route to the create form |
 | `ogpEndpoint` prop | Server-side OGP proxy (CORS blocks direct fetch) | URL-only link cards | `OgpController` (validation + 24h cache) |
 | `extractMarkdownHeadings` + `headingIdPrefix` | Table-of-contents UI outside `.ink-markdown` | No TOC (anchors still work) | `DocumentTableOfContents` scrollspy |

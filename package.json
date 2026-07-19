@@ -6,11 +6,14 @@
     "author": "catatsumuri",
     "private": true,
     "type": "module",
-    "sideEffects": false,
+    "sideEffects": [
+        "*.css"
+    ],
     "exports": {
         ".": "./src/index.ts",
         "./react": "./src/react/index.ts",
-        "./react/mermaid": "./src/react/mermaid-diagram.tsx"
+        "./react/mermaid": "./src/react/mermaid-diagram.tsx",
+        "./styles.css": "./src/react/styles.css"
     },
     "scripts": {
         "test": "node --import tsx --test tests/*.test.ts",
