@@ -48,6 +48,12 @@ test('reduces @[card]/@[github] embeds to bare URL lines', () => {
     );
 });
 
+test('does not rewrite shorthand mentioned mid-sentence without backticks', () => {
+    const input =
+        'You can also write :::message alert for a colon-style warning, or ::::details 外側 for a nested one.';
+    assert.equal(normalizeZennDirectiveShorthand(input), input);
+});
+
 test('does not rewrite shorthand written as inline code', () => {
     const input =
         'Use `:::message alert` for warnings and `:::details タイトル` to collapse.';

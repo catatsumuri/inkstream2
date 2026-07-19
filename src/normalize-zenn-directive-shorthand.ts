@@ -4,9 +4,9 @@ const ZENN_MESSAGE_VARIANTS = ['alert', 'note', 'tip', 'info', 'check'];
 const MESSAGE_VARIANT_PATTERN = ZENN_MESSAGE_VARIANTS.join('|');
 
 const MESSAGE_SHORTHAND_RE = new RegExp(
-    `:::message\\s+(${MESSAGE_VARIANT_PATTERN})\\b`,
+    `^:::message\\s+(${MESSAGE_VARIANT_PATTERN})\\b`,
 );
-const DETAILS_SHORTHAND_RE = /(:{3,})details\s+(.+?)$/;
+const DETAILS_SHORTHAND_RE = /^(:{3,})details\s+(.+?)$/;
 
 const ZENN_EMBED_DIRECTIVES = ['card', 'github'];
 const EMBED_SHORTHAND_RE = new RegExp(
@@ -22,7 +22,12 @@ const EMBED_SHORTHAND_RE = new RegExp(
  * reduced to bare URL lines for a linkify-style renderer to pick up.
  * Ported from inkstream v1's `preprocessMarkdownSyntax`, including its
  * protection of code fences and inline code spans, so literal syntax
- * examples written as `` `:::message alert` `` prose survive.
+ * examples written as `` `:::message alert` `` prose survive. Both
+ * patterns are anchored to the start of the line (transformOutsideCode
+ * passes one full line, or the portion of one outside an inline code
+ * span, per call) so mentioning the shorthand mid-sentence without
+ * backticks -- "you can write :::message alert for a warning" -- isn't
+ * mistaken for an actual directive.
  */
 export function normalizeZennDirectiveShorthand(markdown: string): string {
     return transformOutsideCode(markdown, (segment) =>
