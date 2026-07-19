@@ -99,8 +99,20 @@ test('chart:radar renders a recharts radar chart, not a bar chart', async () => 
     assert.equal(container.querySelectorAll('.recharts-bar').length, 0);
 });
 
+// recharts' <Bar> renders an inactive (unfilled) placeholder for its
+// first paint and animates the real, filled shape in afterward; give it
+// a tick to settle before asserting on `fill="..."` (CI runners are
+// slower than local dev machines and can still be mid-animation at the
+// point a synchronous assertion would otherwise run).
+async function settleChartAnimation(): Promise<void> {
+    await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+}
+
 test('chart:bar uses inkstream\'s default fill color with no CSS present', async () => {
     const container = await renderChart('bar');
+    await settleChartAnimation();
 
     assert.match(container.innerHTML, /fill="#4f46e5"/);
 });
@@ -118,9 +130,7 @@ test('chart:bar picks up an --ink-chart-fill override from CSS', async () => {
     });
     // The getComputedStyle read happens in a passive effect, one tick
     // after the initial (fallback-colored) mount.
-    await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 10));
-    });
+    await settleChartAnimation();
 
     assert.match(container.innerHTML, /fill="#ff0000"/);
 });
