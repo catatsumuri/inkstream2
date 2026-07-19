@@ -376,6 +376,11 @@ export const inkstreamDefaultComponents = {
             {children}
         </div>
     ),
+    columns: ({ cols, children }: InkstreamElementProps) => (
+        <div className="ink-columns" data-cols={cols}>
+            {children}
+        </div>
+    ),
     steps: ({ children }: InkstreamElementProps) => (
         <ol className="ink-steps">{children}</ol>
     ),

@@ -55,6 +55,18 @@ test('renders cards, card groups, and tree fences', () => {
     assert.match(html, /<li class="ink-tree-file">index.ts<\/li>/);
 });
 
+test('renders Columns with a default renderer', () => {
+    const html = render(
+        ['<Columns cols={2}>', '  Left', '', '  Right', '</Columns>'].join(
+            '\n',
+        ),
+    );
+
+    assert.match(html, /<div class="ink-columns" data-cols="2">/);
+    assert.match(html, /Left/);
+    assert.match(html, /Right/);
+});
+
 test('renders zenn image size and caption metadata', () => {
     const html = render('![diagram](/img/a.png =250x)\n*a caption*');
 
