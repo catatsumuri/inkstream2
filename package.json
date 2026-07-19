@@ -1,10 +1,15 @@
 {
     "name": "@catatsumuri/inkstream",
-    "version": "0.0.0",
+    "version": "0.1.0",
     "description": "Markdown engine for Mintlify-style JSX tags, Zenn directives, and GFM: AST-based tag pairing instead of line-based string preprocessing.",
     "license": "MIT",
     "author": "catatsumuri",
-    "private": true,
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/catatsumuri/inkstream.git"
+    },
+    "homepage": "https://github.com/catatsumuri/inkstream#readme",
+    "bugs": "https://github.com/catatsumuri/inkstream/issues",
     "type": "module",
     "sideEffects": [
         "*.css"
@@ -12,6 +17,9 @@
     "files": [
         "dist"
     ],
+    "publishConfig": {
+        "access": "public"
+    },
     "bin": {
         "inkstream": "./dist/cli.js"
     },
