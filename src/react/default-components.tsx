@@ -20,6 +20,7 @@ import type { ChartConfig } from '../parse-chart-fence.js';
 import type { QuizContent } from '../parse-quiz-fence.js';
 import type { TreeNode } from '../parse-tree-fence.js';
 import { parseImageMetadata } from '../zenn-images.js';
+import { CodeBlock } from './code-block.js';
 
 /**
  * Props react-markdown passes to the custom elements emitted by the
@@ -534,4 +535,8 @@ export const inkstreamDefaultComponents = {
     },
     quiz: QuizRenderer,
     chart: ChartRenderer,
+    code: CodeBlock,
+    // CodeBlock renders its own <pre> inside the .ink-code-block container,
+    // so the default <pre> wrapper is unwrapped to a fragment.
+    pre: ({ children }: InkstreamElementProps) => <>{children}</>,
 } as unknown as Components;

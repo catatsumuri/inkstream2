@@ -1,3 +1,4 @@
+export { CodeBlock } from './code-block.js';
 export {
     inkstreamDefaultComponents,
     type InkstreamElementProps,

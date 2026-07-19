@@ -22,6 +22,7 @@ export {
 export {
     remarkCodeFenceComponents,
 } from './remark-code-fence-components.js';
+export { remarkCodeMeta } from './remark-code-meta.js';
 export { remarkZennDirective } from './remark-zenn-directive.js';
 export { inkstreamRemarkPlugins } from './remark-plugins.js';
 export type { ChartConfig, ChartDataPoint, ChartType } from './parse-chart-fence.js';

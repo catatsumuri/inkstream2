@@ -2,6 +2,7 @@ import remarkDirective from 'remark-directive';
 import remarkGfm from 'remark-gfm';
 import type { PluggableList } from 'unified';
 import { remarkCodeFenceComponents } from './remark-code-fence-components.js';
+import { remarkCodeMeta } from './remark-code-meta.js';
 import { remarkGithubAlerts } from './remark-github-alerts.js';
 import { remarkMintlifyTags } from './remark-mintlify-tags.js';
 import { remarkTreeTags } from './remark-tree-tags.js';
@@ -22,4 +23,5 @@ export const inkstreamRemarkPlugins: PluggableList = [
     remarkMintlifyTags,
     remarkTreeTags,
     remarkCodeFenceComponents,
+    remarkCodeMeta,
 ];
