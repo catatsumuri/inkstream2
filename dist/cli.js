@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { readFileSync } from 'node:fs';
+import { readFileSync, realpathSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import { unified } from 'unified';
@@ -84,8 +85,13 @@ export async function runCli(argv, markdown) {
             };
     }
 }
+// npm's bin/ entries are symlinks (e.g. node_modules/.bin/inkstream ->
+// .../dist/cli.js); import.meta.url reflects the resolved real path, so
+// comparing it against the unresolved argv[1] never matches when
+// invoked through the symlink, silently skipping this block entirely.
+// realpathSync resolves argv[1] the same way first.
 const isMain = typeof process.argv[1] === 'string' &&
-    import.meta.url === new URL(process.argv[1], 'file:').href;
+    import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href;
 if (isMain) {
     const result = await runCli(process.argv.slice(2));
     if (result.output) {

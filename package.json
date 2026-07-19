@@ -31,7 +31,7 @@
         "./styles.css": "./dist/react/styles.css"
     },
     "scripts": {
-        "build": "tsc -p tsconfig.build.json && node scripts/copy-static-assets.mjs",
+        "build": "tsc -p tsconfig.build.json && node scripts/finish-build.mjs",
         "prepare": "npm run build",
         "test": "node --import tsx --test tests/*.test.ts",
         "typecheck": "tsc --noEmit",

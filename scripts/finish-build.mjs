@@ -1,4 +1,4 @@
-import { copyFileSync, mkdirSync } from 'node:fs';
+import { chmodSync, copyFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
 const ROOT = join(import.meta.dirname, '..');
@@ -13,3 +13,8 @@ for (const relativePath of ASSETS) {
     mkdirSync(dirname(destination), { recursive: true });
     copyFileSync(source, destination);
 }
+
+// tsc doesn't carry over source files' executable bit; without this,
+// dist/cli.js's shebang is inert and `npm link`/a package.json "bin"
+// entry can't run it directly.
+chmodSync(join(ROOT, 'dist/cli.js'), 0o755);
